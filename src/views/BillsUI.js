@@ -17,14 +17,22 @@ const row = (bill) => {
       </td>
     </tr>
     `)
-  }
+}
 
 const rows = (data) => {
-  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+  // si data venant du test au format: 20-10-01 au lieu de 01 Oct. 20: les trier 
+  if (data[0]['date'].match(/^[0-9-]*$/)) {
+    const antiChrono = (a, b) => ((a.date < b.date) ? 1 : -1);
+    data = [...data].sort(antiChrono);
+    return  data.map(bill => row(bill)).join("") 
+  } else {
+    // si data ne venant pas du test -> data déja triées ligne 37 container/Bills.js
+    return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+  }
 }
 
 export default ({ data: bills, loading, error }) => {
-  
+
   const modal = () => (`
     <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -47,7 +55,7 @@ export default ({ data: bills, loading, error }) => {
   } else if (error) {
     return ErrorPage(error)
   }
-  
+
   return (`
     <div class='layout'>
       ${VerticalLayout(120)}
