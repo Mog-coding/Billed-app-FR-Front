@@ -2,11 +2,17 @@
  * @jest-environment jsdom
  */
 
-import {screen, waitFor} from "@testing-library/dom"
+import { fireEvent, screen, waitFor } from "@testing-library/dom"
+// Ajout testing-library userEvent
+import userEvent from '@testing-library/dom'
+import '@testing-library/jest-dom'
+
+
 import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
-import { ROUTES_PATH} from "../constants/routes.js";
-import {localStorageMock} from "../__mocks__/localStorage.js";
+import { ROUTES_PATH } from "../constants/routes.js"
+import { localStorageMock } from "../__mocks__/localStorage.js"
+import Bills, { default as contBills } from "../containers/Bills.js"
 
 import router from "../app/Router.js";
 
@@ -25,8 +31,8 @@ describe("Given I am connected as an employee", () => {
       window.onNavigate(ROUTES_PATH.Bills)
       await waitFor(() => screen.getByTestId('icon-window'))
       const windowIcon = screen.getByTestId('icon-window')
-      //to-do write expect expression
-
+      // Ajout test 
+      expect(windowIcon).toHaveClass('active-icon');
     })
     test("Then bills should be ordered from earliest to latest", () => {
       document.body.innerHTML = BillsUI({ data: bills })
@@ -35,5 +41,63 @@ describe("Given I am connected as an employee", () => {
       const datesSorted = [...dates].sort(antiChrono)
       expect(dates).toEqual(datesSorted)
     })
+
+    test("Then click on eye icon should launch modal", () => {
+      // charge html BillsUI() dans body
+      document.body.innerHTML = BillsUI({ data: bills });
+
+      // instance de class Bills pour utiliser méthodes      // paramètres Bills()
+      const localStorage = jest.fn();
+      const onNavigate = jest.fn();
+      const store = jest.fn();
+      // instance
+      const billsContainer = new Bills({
+        document, onNavigate, store, localStorage
+      });
+
+      //simulation click
+      const iconEye = screen.getAllByTestId('icon-eye');
+      const handleClickIconE = jest.fn(billsContainer.handleClickIconEye(iconEye[0]));
+      iconEye[0].addEventListener("click",() => handleClickIconE);
+      userEvent.click(iconEye[0]);  
+
+      expect(handleClickIconE).toHaveBeenCalled();
+      expect(screen.queryByText("Justificatif")).toBeTruthy();
+    })
+
+    /*
+    test("Then click on button NewBill should launch function handleClickNewBill()", () => {
+      // charge html BillsUI() dans body
+      // document.body.innerHTML = BillsUI({ data: bills }) 
+
+      // instance de class Bills pour utiliser méthodes
+      // paramètres Bills()
+      const localStorage = jest.fn();
+      const onNavigate = jest.fn(); 
+      const store = jest.fn();
+      // instance
+      const bills = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorage: window.localStorage
+      });
+
+      //simulation click
+      const handleClickNewBil = jest.fn(bills.handleClickNewBill);
+      const btnNewBill = screen.getByTestId('btn-new-bill');;
+      btnNewBill.addEventListener("click", handleClickNewBil);
+      fireEvent.click(btnNewBill);
+
+      expect(handleClickNewBil).toHaveBeenCalled();
+      // test si page newBill affichée
+      expect(screen.queryByText("Envoyer une note de frais")).toBeTruthy();  // <<--- error
+
+      //utilisation du router()? pour simuler changement de page ?
+    })
+    */
+
+
+
   })
-})
+}) 
