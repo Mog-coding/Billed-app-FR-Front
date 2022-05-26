@@ -2,11 +2,11 @@
  * @jest-environment jsdom
  */
 
-import { fireEvent, screen, waitFor } from "@testing-library/dom"
+import { screen, waitFor } from "@testing-library/dom"
 // Ajout testing-library userEvent
-import userEvent from '@testing-library/dom'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-
+import { ROUTES } from '../constants/routes.js'
 
 import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
@@ -14,7 +14,7 @@ import { ROUTES_PATH } from "../constants/routes.js"
 import { localStorageMock } from "../__mocks__/localStorage.js"
 import Bills, { default as contBills } from "../containers/Bills.js"
 
-import router from "../app/Router.js";
+import router from "../app/Router.js"
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -41,63 +41,65 @@ describe("Given I am connected as an employee", () => {
       const datesSorted = [...dates].sort(antiChrono)
       expect(dates).toEqual(datesSorted)
     })
+  })
+})
 
-    test("Then click on eye icon should launch modal", () => {
-      // charge html BillsUI() dans body
-      document.body.innerHTML = BillsUI({ data: bills });
+describe('Given I am on Bills page as an employee', () => {
+  describe('When I click on eye icon', () => {
+    test(('Then, it should launch modal'), () => {
+      // Chargement de la page Bills
+      document.body.innerHTML = BillsUI({ data: bills })
 
-      // instance de class Bills pour utiliser méthodes      // paramètres Bills()
-      const localStorage = jest.fn();
-      const onNavigate = jest.fn();
+      // Instance class Bills
+      const onNavigate = null; // jest.fn();
       const store = jest.fn();
-      // instance
-      const billsContainer = new Bills({
-        document, onNavigate, store, localStorage
-      });
+      const localStorage = jest.fn();
+      const billsCont = new Bills({ document, onNavigate, store, localStorage })
 
-      //simulation click
+      // Simule méthode bootstrap .modal('show'), évite typeError handleClickIconEye
+      $.fn.modal = jest.fn();
+
+      // Simulation methode
+      const handleClickIconE = jest.fn(billsCont.handleClickIconEye);
+
+      // Simulation click iconEye
       const iconEye = screen.getAllByTestId('icon-eye');
-      const handleClickIconE = jest.fn(billsContainer.handleClickIconEye(iconEye[0]));
-      iconEye[0].addEventListener("click",() => handleClickIconE);
-      userEvent.click(iconEye[0]);  
-
-      expect(handleClickIconE).toHaveBeenCalled();
-      expect(screen.queryByText("Justificatif")).toBeTruthy();
+      iconEye.forEach(el => {
+        el.addEventListener("click", () => handleClickIconE(el));
+        userEvent.click(el);
+        expect(handleClickIconE).toHaveBeenCalled();
+        expect(screen.queryByText("Justificatif")).toBeTruthy();
+      })
     })
+  })
+})
 
-    /*
-    test("Then click on button NewBill should launch function handleClickNewBill()", () => {
-      // charge html BillsUI() dans body
-      // document.body.innerHTML = BillsUI({ data: bills }) 
+describe('Given I am on Bills page as an employee', () => {
+  describe('When I click newBill button', () => {
+    test(('Then, it should navigate to newBill page'), () => {
+      // Charge la page html fonction mot clé
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
 
-      // instance de class Bills pour utiliser méthodes
-      // paramètres Bills()
-      const localStorage = jest.fn();
-      const onNavigate = jest.fn(); 
-      const store = jest.fn();
-      // instance
-      const bills = new Bills({
-        document,
-        onNavigate,
-        store,
-        localStorage: window.localStorage
-      });
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
 
-      //simulation click
-      const handleClickNewBil = jest.fn(bills.handleClickNewBill);
+      // Charge page Bills + instance class Bills
+      document.body.innerHTML = BillsUI({ data: bills }) 
+      const billsContainer = new Bills({ document, onNavigate, store: null, localStorage: window.localStorage })
+
+      //simulation click btn NewBill
+      const handleClickNewBil = jest.fn(billsContainer.handleClickNewBill);
       const btnNewBill = screen.getByTestId('btn-new-bill');;
       btnNewBill.addEventListener("click", handleClickNewBil);
-      fireEvent.click(btnNewBill);
+      userEvent.click(btnNewBill);
 
       expect(handleClickNewBil).toHaveBeenCalled();
-      // test si page newBill affichée
-      expect(screen.queryByText("Envoyer une note de frais")).toBeTruthy();  // <<--- error
-
-      //utilisation du router()? pour simuler changement de page ?
+      // test si page newBill affichée (utilise ROUTES())
+      expect(screen.queryByText("Envoyer une note de frais")).toBeTruthy(); 
     })
-    */
-
-
-
   })
-}) 
+})  
