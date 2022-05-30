@@ -18,14 +18,14 @@ import NewBill from "../containers/NewBill.js"
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
     test("Then mail icon in vertical layout should be highlighted and should render NewBillPage", () => {
-     
+
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-    
+
       window.localStorage.setItem('user', JSON.stringify({
         type: 'Employee',
         email: "employee@test.tld"
       }))
-     
+
       const root = document.createElement("div")
       root.setAttribute("id", "root")
       document.body.append(root)
@@ -41,8 +41,8 @@ describe("Given I am connected as an employee", () => {
 })
 
 describe("Given I am connected on NewBill Page", () => {
-  describe("When I upload a not managed file", () => {
-    test("Then it must launch alert message", () => {
+  describe("When I upload a file", () => {
+    test("Then it must launch alert if file is not allowed", () => {
 
       Object.defineProperty(window, 'alert', { value: jest.fn() })
 
@@ -56,18 +56,20 @@ describe("Given I am connected on NewBill Page", () => {
       const inputChooseFile = screen.getByTestId('file');
       inputChooseFile.addEventListener('change', handleChangeFile);
 
-      // files contient 2 fichiers
-      const files = [
-        new File(["texte"], "mauvaisFormat.txt", { type: "text/plain" }),
-        new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" })
-      ];
-      files.forEach((el) => {
-      userEvent.upload(inputChooseFile, el)
-      })
-     
+      const fileNok = new File(["texte"], "mauvaisFormat.txt", { type: "text/plain" });
+      userEvent.upload(inputChooseFile, fileNok)
+      expect(handleChangeFile).toHaveBeenCalledTimes(1);
+      expect(alert).toHaveBeenCalledTimes(2);
+
+      const fileOk = new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" })
+      userEvent.upload(inputChooseFile, fileOk)
       expect(handleChangeFile).toHaveBeenCalledTimes(2);
       expect(alert).toHaveBeenCalledTimes(2);
-    
+
+      const fileNok2 = new File(["texte"], "mauvaisFormat.txt", { type: "text/plain" });
+      userEvent.upload(inputChooseFile, fileNok2);
+      expect(handleChangeFile).toHaveBeenCalledTimes(3);
+      expect(alert).toHaveBeenCalledTimes(4);
     })
   })
-})   
+})
