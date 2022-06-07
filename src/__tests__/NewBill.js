@@ -41,8 +41,8 @@ describe("Given I am connected as an employee", () => {
 })
 
 describe("Given I am connected on NewBill Page", () => {
-  describe("When I upload a file", () => {
-    test("Then it must launch alert if file is not allowed", () => {
+  describe("When I upload a not allowed file", () => {
+    test("Then it must launch alert", () => {
 
       Object.defineProperty(window, 'alert', { value: jest.fn() })
 
@@ -60,16 +60,69 @@ describe("Given I am connected on NewBill Page", () => {
       userEvent.upload(inputChooseFile, fileNok)
       expect(handleChangeFile).toHaveBeenCalledTimes(1);
       expect(alert).toHaveBeenCalledTimes(2);
+    })
+  })
 
-      const fileOk = new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" })
+  describe("When I upload an allowed file", () => {
+    test("Then it must not launch alert", () => {
+
+      Object.defineProperty(window, 'alert', { value: jest.fn() })
+
+      const html = NewBillUI();
+      document.body.innerHTML = html;
+
+      const newBill = new NewBill({ document, onNavigate: null, store: mockStore, localStorage: window.localStorage });
+
+      const handleChangeFile = jest.fn(newBill.handleChangeFile);
+
+      const inputChooseFile = screen.getByTestId('file');
+      inputChooseFile.addEventListener('change', handleChangeFile);
+
+      const fileOk = new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" });
+
       userEvent.upload(inputChooseFile, fileOk)
-      expect(handleChangeFile).toHaveBeenCalledTimes(2);
-      expect(alert).toHaveBeenCalledTimes(2);
+      expect(handleChangeFile).toHaveBeenCalledTimes(1);
+      expect(alert).not.toHaveBeenCalled();
+    })
+  })
 
-      const fileNok2 = new File(["texte"], "mauvaisFormat.txt", { type: "text/plain" });
-      userEvent.upload(inputChooseFile, fileNok2);
-      expect(handleChangeFile).toHaveBeenCalledTimes(3);
-      expect(alert).toHaveBeenCalledTimes(4);
+  describe("When I click on submit button", () => {
+    test("Should launch handleSubmit method and navigate to Bills page", async () => {
+
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
+
+      document.body.innerHTML = NewBillUI();
+      const newBill = new NewBill({ document, onNavigate, store: mockStore, localStorage: window.localStorage });
+
+      const handleSubmit = jest.fn(newBill.handleSubmit);
+
+      // formulaire rempli correctement
+      /*
+      fireEvent.change(screen.getByTestId('expense-type'), { target: { value: "Transports" } });
+      fireEvent.change(screen.getByTestId('expense-name'), { target: { value: "Vol Athen" } });
+      fireEvent.change(screen.getByTestId('datepicker'), { target: { value: "2012-12-21" } });
+      fireEvent.change(screen.getByTestId('amount'), { target: { value: 200 } });
+      fireEvent.change(screen.getByTestId('vat'), { target: { value: 70 } });
+      fireEvent.change(screen.getByTestId('pct'), { target: { value: 21 } });
+      fireEvent.change(screen.getByTestId('pct'), { target: { value: 21 } });
+      fireEvent.change(screen.getByTestId('commentary'), { target: { value: "hi" } });
+      */
+
+      newBill.fileName = 'facture voyage'
+      newBill.fileUrl = 'preview-facture-free-201801-pdf-1.jpg'
+      newBill.mail = "employee@tld.test"
+
+      // Appui submit   
+      const submitButton = screen.getByTestId('submitButton');
+      submitButton.addEventListener('submit', handleSubmit);
+      userEvent.click(submitButton);
+
+      // Chargement page Bills
+      await waitFor(() => screen.getByTestId('btn-new-bill'));
+      expect(screen.getByTestId('btn-new-bill')).toBeTruthy();
+
     })
   })
 })
