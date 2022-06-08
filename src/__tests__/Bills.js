@@ -40,13 +40,19 @@ describe("Given I am connected as an employee", () => {
       expect(windowIcon).toHaveClass('active-icon');
     })
 
+    test("fetches bills from mock API GET", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
 
-    test("Then bill icon in vertical layout should be highlighted", async () => {
-      const getSpy = jest.spyOn(store, 'bills')
-      const bills = await store.bills();
-      expect(getSpy).toHaveBeenCalled();
+      const billsInst = new Bills({ document, onNavigate, store: mockStore, localStorage: window.localStorage });
+
+      billsInst.getBills()
+        .then(bills => {
+          expect(bills).toHaveLength(4);
+        })
     })
-   
 
     test("Then bills should be ordered from earliest to latest", () => {
       document.body.innerHTML = BillsUI({ data: bills })
@@ -85,7 +91,6 @@ describe("Given I am connected as an employee", () => {
 
     describe('When I click newBill button', () => {
       test(('Then, it should navigate to newBill page'), () => {
-        // Charge la page html fonction mot clé
         const onNavigate = (pathname) => {
           document.body.innerHTML = ROUTES({ pathname })
         }
@@ -95,90 +100,59 @@ describe("Given I am connected as an employee", () => {
           type: 'Employee'
         }))
 
-        // Charge page Bills + instance class Bills
         document.body.innerHTML = '';
         document.body.innerHTML = BillsUI({ data: bills })
         const billsContainer = new Bills({ document, onNavigate, store: null, localStorage: window.localStorage })
 
-        //simulation click btn NewBill
         const handleClickNewBil = jest.fn(billsContainer.handleClickNewBill);
         const btnNewBill = screen.getByTestId('btn-new-bill');
         btnNewBill.addEventListener("click", handleClickNewBil);
         userEvent.click(btnNewBill);
 
         expect(handleClickNewBil).toHaveBeenCalled();
-        // test si page newBill affichée (utilise ROUTES())
         expect(screen.queryByText("Envoyer une note de frais")).toBeTruthy();
-
       })
     })
-  })
-})
 
-
-// test d'intégration GET
-describe("Given I am a user connected as Employee", () => {
-  describe("When I navigate to Bill", () => {
-    test("fetches bills from mock API GET", async () => {
-
-      jest.mock("../app/store", () => mockStore)
-
-      localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }));
-      const root = document.createElement("div")
-      document.body.innerHTML = "";
-      root.setAttribute("id", "root")
-      document.body.append(root)
-
-      router()
-      
-      window.onNavigate(ROUTES_PATH.Bills)
-      console.log(document.body.innerHTML)
-      // await waitFor(() => screen.getByText("Mes notes de frais"))
-    })
-  })
-
-  /*
-  describe("When an error occurs on API", () => {
-    beforeEach(() => {
-      jest.spyOn(mockStore, "bills")
-      Object.defineProperty(
-        window,
-        'localStorage',
-        { value: localStorageMock }
-      )
-      window.localStorage.setItem('user', JSON.stringify({
-        type: 'Employee',
-        email: "a@a"
-      }))
-      const root = document.createElement("div")
-      root.setAttribute("id", "root")
-      document.body.appendChild(root)
-      router()
-    })
-
-    
-    test("fetches bills from an API and fails with 404 message error", async () => {
-      mockStore.bills.mockImplementationOnce(() => {
-        return {
-          list: () => {
-            return Promise.reject(new Error("Erreur 404"))
-          }
-        }
+    describe("When an error occurs on API", () => {
+      beforeEach(() => {
+        jest.spyOn(mockStore, "bills")
+        Object.defineProperty(
+          window,
+          'localStorage',
+          { value: localStorageMock }
+        )
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee',
+          email: "a@a"
+        }))
+        const root = document.createElement("div")
+        root.setAttribute("id", "root")
+        document.body.appendChild(root)
+        router()
       })
-      window.onNavigate(ROUTES_PATH.Bills)
-      await new Promise(process.nextTick);
-      const message = await screen.getByText(/Erreur 404/)
-      expect(message).toBeTruthy()
+
+      test("fetches bills from an API and fails with 404 message error", async () => {
+        mockStore.bills()
+          .list(() => { throw new Error("Error 404") })
+          .catch(error => {
+            document.body.innerHTML = BillsUI({ data: [], error });
+            console.log("hi")
+            const message = screen.getByText(/Error 404/)
+            expect(message).toBeTruthy()
+          })
+      })
+
+      test("fetches bills from an API and fails with 500 message error", async () => {
+        mockStore.bills()
+          .list(() => { throw new Error("Error 500") })
+          .catch(error => {
+            document.body.innerHTML = BillsUI({ data: [], error })
+            const message = screen.getByText(/Error 500/)
+            expect(message).toBeTruthy()
+          })
+      })
     })
+
+  })
 })
-*/
-
-
-
-})
-
-
-/*
-      console.log("ici21", document.body.innerHTML)
-      import fetch from 'node-fetch'
-*/
