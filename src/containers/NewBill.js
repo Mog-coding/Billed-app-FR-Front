@@ -21,9 +21,10 @@ export default class NewBill {
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length - 1]
     const mimeType = e.target.files[0]["type"];
-    // Si fichier uploadé mimeType match avec mime type image/jpeg ou image/png
+
+    // fichier uploadé si mimeType match pas image/jpeg image/png -> alert
     if (!mimeType.match(/^image\/jpeg|image\/png$/)) {
-      return alert('Veuillez choisir un fichier de type .jpeg, .jpeg ou .png')
+      return alert('Veuillez choisir un fichier de type .jpeg, .jpg ou .png')
     }
 
     const formData = new FormData()
@@ -38,9 +39,10 @@ export default class NewBill {
         headers: {
           noContentType: true
         }
-      })
+      }) 
       .then(({ fileUrl, key }) => {
         console.log(fileUrl)
+        console.log(key)
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
@@ -63,11 +65,14 @@ export default class NewBill {
       fileName: this.fileName,
       status: 'pending'
     }
+    console.log(bill)
+    console.log('handlesubmte appelé')
     this.updateBill(bill)
     this.onNavigate(ROUTES_PATH['Bills'])
   }
 
   // not need to cover this function by tests
+  /* istanbul ignore next */
   updateBill = (bill) => {
     if (this.store) {
       this.store
