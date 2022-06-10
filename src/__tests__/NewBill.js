@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { fireEvent, screen, waitFor } from "@testing-library/dom"
+import { screen, waitFor } from "@testing-library/dom"
 import "@testing-library/jest-dom"
 import userEvent from '@testing-library/user-event'
 import { localStorageMock } from "../__mocks__/localStorage.js"
@@ -64,8 +64,7 @@ describe("Given I am connected as an employee", () => {
 
       Object.defineProperty(window, 'alert', { value: jest.fn() })
 
-      const html = NewBillUI();
-      document.body.innerHTML = html;
+      document.body.innerHTML = NewBillUI();
 
       const newBill = new NewBill({ document, onNavigate: null, store: mockStore, localStorage: window.localStorage });
 
@@ -76,8 +75,72 @@ describe("Given I am connected as an employee", () => {
 
       const fileNok = new File(["texte"], "mauvaisFormat.txt", { type: "text/plain" });
       userEvent.upload(inputChooseFile, fileNok);
+
       expect(handleChangeFileSpy).toHaveBeenCalled();
       expect(alert).toHaveBeenCalled();
+    })
+  })
+
+  describe("When I upload a file, it POST bill to API", () => {
+    test("Then create() method of mockedStore should return test data ", async () => {
+      document.body.innerHTML = NewBillUI();
+
+      const newBill = new NewBill({ document, onNavigate: null, store: mockStore, localStorage: window.localStorage });
+
+      const inputChooseFile = screen.getByTestId('file');
+      inputChooseFile.addEventListener('change', (event) => newBill.handleChangeFile(event));
+
+      const fileOk = new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" });
+      userEvent.upload(inputChooseFile, fileOk);
+
+      await waitFor(() => newBill.fileUrl !== null);
+      expect(newBill.billId).toBe('1234');
+      expect(newBill.fileUrl).toBe('https://localhost:3456/images/test.jpg');
+    })
+  })
+
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      jest.spyOn(mockStore, "bills")
+      Object.defineProperty(
+        window,
+        'localStorage',
+        { value: localStorageMock }
+      )
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+      router()
+    })
+
+    test("create() bill from mock API return 404 message error", async () => {
+
+      console.error = jest.fn()
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          create: () => {
+            return Promise.reject(new Error('Erreur 404'))
+          }
+        }
+      })
+
+      document.body.innerHTML = NewBillUI();
+      const newBill = new NewBill({ document, onNavigate: null, store: mockStore, localStorage: window.localStorage });
+
+      const inputChooseFile = screen.getByTestId('file');
+      inputChooseFile.addEventListener('change', (event) => newBill.handleChangeFile(event));
+
+      const fileOk = new File(["image"], "bonFormat.jpeg", { type: "image/jpeg" });
+      userEvent.upload(inputChooseFile, fileOk);
+
+      await waitFor(() => console.error('Erreur 404'));
+
+      expect(console.error).toHaveBeenCalledWith('Erreur 404')
     })
   })
 

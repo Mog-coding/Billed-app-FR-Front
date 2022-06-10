@@ -64,7 +64,6 @@ export default class NewBill {
       fileName: this.fileName,
       status: 'pending'
     }
-    console.log("ici3", bill)
     this.updateBill(bill)
     this.onNavigate(ROUTES_PATH['Bills'])
   }
