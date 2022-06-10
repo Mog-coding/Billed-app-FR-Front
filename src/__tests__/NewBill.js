@@ -36,7 +36,7 @@ describe("Given I am connected as an employee", () => {
     })
   })
 
-  describe("When I upload an allowed file", () => {
+  describe("When I am on NewBill Page and I upload an allowed file", () => {
     test("Then it must not launch alert", () => {
 
       Object.defineProperty(window, 'alert', { value: jest.fn() })
@@ -59,7 +59,7 @@ describe("Given I am connected as an employee", () => {
     })
   })
 
-  describe("When I upload a not allowed file", () => {
+  describe("When I am on NewBill Page and I upload a not allowed file", () => {
     test("Then it must launch alert", () => {
 
       Object.defineProperty(window, 'alert', { value: jest.fn() })
@@ -81,8 +81,8 @@ describe("Given I am connected as an employee", () => {
     })
   })
 
-  describe("When I upload a file, it POST bill to API", () => {
-    test("Then create() method of mockedStore should return test data ", async () => {
+  describe("When I am on NewBill Page and I upload a file, it POST bill to API", () => {
+    test("Then mockedStore should return bill test data ", async () => {
       document.body.innerHTML = NewBillUI();
 
       const newBill = new NewBill({ document, onNavigate: null, store: mockStore, localStorage: window.localStorage });
@@ -117,7 +117,7 @@ describe("Given I am connected as an employee", () => {
       router()
     })
 
-    test("create() bill from mock API return 404 message error", async () => {
+    test("mock API should return 404 message error", async () => {
 
       console.error = jest.fn()
 
@@ -144,7 +144,7 @@ describe("Given I am connected as an employee", () => {
     })
   })
 
-  describe("When I click on submit button", () => {
+  describe("When I am on NewBill Page and I click on submit button", () => {
     test("Should navigate to Bills page", async () => {
 
       const onNavigate = (pathname) => {
