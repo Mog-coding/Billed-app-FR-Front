@@ -6,7 +6,6 @@ import { screen, waitFor } from "@testing-library/dom"
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { ROUTES } from '../constants/routes.js'
-import store from '../app/Store.js'
 import mockStore from "../__mocks__/store"
 import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
@@ -16,11 +15,10 @@ import Bills from "../containers/Bills.js"
 import router from "../app/Router.js"
 
 describe("Given I am connected as an employee", () => {
-  describe("When I am on Bills Page with loading parameter", () => {
-    test("Then loading div should appear", () => {
+  describe("When I am on Bills page with loading parameter", () => {
+    test("Then loading page should appear", () => {
       document.body.innerHTML = BillsUI({ data: bills, loading: true })
       const loading = screen.getByTestId("test-loading");
-      // Si data-testid="test-loading" existe
       expect(loading).toBeTruthy();
     })
 
@@ -36,7 +34,6 @@ describe("Given I am connected as an employee", () => {
       window.onNavigate(ROUTES_PATH.Bills)
       await waitFor(() => screen.getByTestId('icon-window'))
       const windowIcon = screen.getByTestId('icon-window')
-      // Si windowIcon/bill icon illuminé 
       expect(windowIcon).toHaveClass('active-icon');
     })
 
@@ -64,21 +61,18 @@ describe("Given I am connected as an employee", () => {
 
     describe('When I click on eye icon', () => {
       test(('Then, it should launch modal'), () => {
-        // Chargement de la page Bills
         document.body.innerHTML = BillsUI({ data: bills })
 
-        // Instance class Bills
         const onNavigate = null;
         const store = jest.fn();
         const localStorage = jest.fn();
         const billsCont = new Bills({ document, onNavigate, store, localStorage })
 
-        // Méthode fictive bootstrap .modal('show'), évite typeError handleClickIconEye
+        // Méthode fictive bootstrap .modal('show')
         $.fn.modal = jest.fn();
 
         const handleClickIconE = jest.fn(billsCont.handleClickIconEye);
 
-        // Simulation click iconEye
         const iconEye = screen.getAllByTestId('icon-eye');
         iconEye.forEach(el => {
           el.addEventListener("click", () => handleClickIconE(el));
@@ -134,10 +128,9 @@ describe("Given I am connected as an employee", () => {
 
       test("fetches bills from an API and fails with 404 message error", async () => {
         mockStore.bills()
-          .list(() => { throw new Error("Error 404") })
+          .create(() => { throw new Error("Error 404") })
           .catch(error => {
             document.body.innerHTML = BillsUI({ data: [], error });
-            console.log("hi")
             const message = screen.getByText(/Error 404/)
             expect(message).toBeTruthy()
           })
