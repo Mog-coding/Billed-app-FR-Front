@@ -81,7 +81,7 @@ describe("Given I am connected as an employee", () => {
     })
   })
 
-  describe("When I am on NewBill Page and I upload a file, it POST bill to API", () => {
+  describe("When I am on NewBill Page and I upload a file, API POST bill", () => {
     test("Then mockedStore should return bill test data ", async () => {
       document.body.innerHTML = NewBillUI();
 
